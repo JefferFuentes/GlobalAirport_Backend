@@ -1,0 +1,2 @@
+﻿const p=require("../../../../shared/config/prisma");exports.vuelo=id=>p.vuelo.findUnique({where:{id:Number(id)},include:{aeronave:{include:{asientos:true}},reservaciones:{where:{estado:{not:"CANCELADA"}},select:{asientoId:true}}}});exports.comprobante=id=>p.reservacion.findUnique({where:{id:Number(id)},include:{pasajero:true,vuelo:{include:{aeropuertoOrigen:true,aeropuertoDestino:true}},asiento:true,checkIn:true}});
+

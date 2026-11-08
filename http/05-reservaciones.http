@@ -1,0 +1,656 @@
+@baseUrl = http://localhost:3000/api
+@token = PEGUE_TOKEN_AQUI
+
+########################################################
+# SUBSISTEMA 5: RESERVACIONES Y CHECK-IN
+########################################################
+
+# Rutas confirmadas:
+#
+# GET   /api/reservaciones
+# GET   /api/reservaciones/:id
+# POST  /api/reservaciones
+# PATCH /api/reservaciones/:id
+# PATCH /api/reservaciones/:id/cancelar
+#
+# GET   /api/vuelos/:vueloId/asientos
+# GET   /api/comprobantes/:id
+#
+# POST  /api/checkin
+#
+# IMPORTANTE:
+# - No existe DELETE /reservaciones/:id
+# - No existe GET /checkin
+# - No existe PATCH /checkin/:id
+# - No existe DELETE /checkin/:id
+
+
+########################################################
+# 0. COMPROBAR EL BACKEND
+########################################################
+
+###
+### Verificar que la API esté funcionando
+GET {{baseUrl}}/salud
+
+
+########################################################
+# 1. AUTENTICACIÓN
+########################################################
+
+###
+### Login del Administrador General
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "correo": "admin@globalairport.com",
+  "password": "Admin12345"
+}
+
+###
+### Consultar usuario autenticado
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}
+
+
+########################################################
+# 2. DISPONIBILIDAD DE ASIENTOS
+########################################################
+
+# Ruta:
+# GET /api/vuelos/:vueloId/asientos
+#
+# Acceso:
+# - Cualquier usuario autenticado
+#
+# Esta solicitud debe ejecutarse antes de crear una
+# reservación para conocer cuáles asientos están libres.
+
+
+###
+### Consultar asientos disponibles del vuelo 1
+GET {{baseUrl}}/vuelos/1/asientos
+Authorization: Bearer {{token}}
+
+###
+### Consultar asientos disponibles del vuelo 2
+GET {{baseUrl}}/vuelos/2/asientos
+Authorization: Bearer {{token}}
+
+###
+### Consultar disponibilidad de un vuelo inexistente
+### Debe responder 404
+GET {{baseUrl}}/vuelos/99999/asientos
+Authorization: Bearer {{token}}
+
+
+########################################################
+# 3. RESERVACIONES
+########################################################
+
+# GET:
+# - Cualquier usuario autenticado
+#
+# POST, PATCH y CANCELAR:
+# - ADMIN_GENERAL
+# - ADMIN_AEROPUERTO
+# - EMPLEADO
+#
+# Antes de crear una reservación deben existir:
+# 1. Pasajero
+# 2. Vuelo
+# 3. Asiento perteneciente a la aeronave del vuelo
+#
+# El asiento debe estar disponible.
+
+
+########################################################
+# 3.1 CONSULTAR RESERVACIONES
+########################################################
+
+###
+### Listar reservaciones
+GET {{baseUrl}}/reservaciones
+Authorization: Bearer {{token}}
+
+###
+### Obtener reservación por ID
+GET {{baseUrl}}/reservaciones/1
+Authorization: Bearer {{token}}
+
+###
+### Obtener reservación inexistente
+GET {{baseUrl}}/reservaciones/99999
+Authorization: Bearer {{token}}
+
+
+########################################################
+# 3.2 CREAR RESERVACIONES
+########################################################
+
+###
+### Crear reservación con tarjeta
+POST {{baseUrl}}/reservaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "pasajeroId": 1,
+  "vueloId": 1,
+  "asientoId": 1,
+  "metodoPago": "TARJETA",
+  "monto": 250.00
+}
+
+###
+### Crear reservación con efectivo
+POST {{baseUrl}}/reservaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "pasajeroId": 2,
+  "vueloId": 1,
+  "asientoId": 2,
+  "metodoPago": "EFECTIVO",
+  "monto": 275.50
+}
+
+###
+### Crear reservación con SINPE
+POST {{baseUrl}}/reservaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "pasajeroId": 3,
+  "vueloId": 2,
+  "asientoId": 10,
+  "metodoPago": "SINPE",
+  "monto": 180.00
+}
+
+###
+### Crear reservación con transferencia
+POST {{baseUrl}}/reservaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "pasajeroId": 4,
+  "vueloId": 2,
+  "asientoId": 11,
+  "metodoPago": "TRANSFERENCIA",
+  "monto": 320.00
+}
+
+
+########################################################
+# 3.3 ACTUALIZAR RESERVACIONES
+########################################################
+
+###
+### Actualizar método de pago
+PATCH {{baseUrl}}/reservaciones/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "metodoPago": "TRANSFERENCIA"
+}
+
+###
+### Actualizar monto
+PATCH {{baseUrl}}/reservaciones/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "monto": 285.75
+}
+
+###
+### Cambiar pasajero
+PATCH {{baseUrl}}/reservaciones/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "pasajeroId": 2
+}
+
+###
+### Cambiar asiento
+### Verifique primero la disponibilidad del asiento
+PATCH {{baseUrl}}/reservaciones/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "asientoId": 3
+}
+
+###
+### Cambiar vuelo y asiento
+### El asiento debe pertenecer a la aeronave del nuevo vuelo
+PATCH {{baseUrl}}/reservaciones/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vueloId": 2,
+  "asientoId": 10
+}
+
+###
+### Actualizar datos comerciales de la reservación
+PATCH {{baseUrl}}/reservaciones/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "metodoPago": "TARJETA",
+  "monto": 300.00
+}
+
+
+########################################################
+# 3.4 CANCELAR RESERVACIONES
+########################################################
+
+###
+### Cancelar reservación
+PATCH {{baseUrl}}/reservaciones/1/cancelar
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "motivo": "Cambio de itinerario del pasajero"
+}
+
+###
+### Cancelar por emergencia médica
+PATCH {{baseUrl}}/reservaciones/2/cancelar
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "motivo": "Emergencia medica"
+}
+
+###
+### Cancelar sin indicar motivo
+### El servicio permite motivo nulo, según el código compartido
+PATCH {{baseUrl}}/reservaciones/3/cancelar
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{}
+
+
+########################################################
+# 4. CHECK-IN
+########################################################
+
+# Ruta:
+# POST /api/checkin
+#
+# Roles autorizados:
+# - ADMIN_GENERAL
+# - ADMIN_AEROPUERTO
+# - EMPLEADO
+#
+# Antes de hacer check-in:
+# 1. La reservación debe existir.
+# 2. La reservación debe estar CONFIRMADA.
+# 3. No debe tener un check-in previo.
+#
+# Al realizarlo:
+# - Se crea el código de abordaje.
+# - La reservación cambia de CONFIRMADA a CHECK_IN.
+
+
+###
+### Realizar check-in por un empleado
+POST {{baseUrl}}/checkin
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "reservacionId": 1,
+  "empleadoId": 1
+}
+
+###
+### Realizar check-in por otro empleado
+POST {{baseUrl}}/checkin
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "reservacionId": 2,
+  "empleadoId": 2
+}
+
+###
+### Realizar check-in sin empleado
+### Puede funcionar si empleadoId es opcional en el modelo
+POST {{baseUrl}}/checkin
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "reservacionId": 3
+}
+
+
+########################################################
+# 5. COMPROBANTES
+########################################################
+
+# Ruta:
+# GET /api/comprobantes/:id
+#
+# El parámetro :id corresponde al ID de la reservación.
+#
+# Acceso:
+# - Cualquier usuario autenticado
+#
+# El comprobante puede incluir:
+# - Reservación
+# - Pasajero
+# - Vuelo
+# - Aeropuerto de origen
+# - Aeropuerto de destino
+# - Asiento
+# - Check-in
+
+
+###
+### Obtener comprobante de la reservación 1
+GET {{baseUrl}}/comprobantes/1
+Authorization: Bearer {{token}}
+
+###
+### Obtener comprobante de la reservación 2
+GET {{baseUrl}}/comprobantes/2
+Authorization: Bearer {{token}}
+
+###
+### Obtener comprobante de una reservación inexistente
+### Debe responder 404
+GET {{baseUrl}}/comprobantes/99999
+Authorization: Bearer {{token}}
+
+
+########################################################
+# 6. PRUEBAS DE VALIDACIÓN DE RESERVACIONES
+########################################################
+
+###
+### Error: reservación sin pasajeroId
+### Debe responder 400
+POST {{baseUrl}}/reservaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vueloId": 1,
+  "asientoId": 1,
+  "metodoPago": "TARJETA",
+  "monto": 250.00
+}
+
+###
+### Error: reservación sin vueloId
+### Debe responder 400
+POST {{baseUrl}}/reservaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "pasajeroId": 1,
+  "asientoId": 1,
+  "metodoPago": "TARJETA",
+  "monto": 250.00
+}
+
+###
+### Error: reservación sin asientoId
+### Debe responder 400
+POST {{baseUrl}}/reservaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "pasajeroId": 1,
+  "vueloId": 1,
+  "metodoPago": "TARJETA",
+  "monto": 250.00
+}
+
+###
+### Error: reservación sin método de pago
+### Debe responder 400
+POST {{baseUrl}}/reservaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "pasajeroId": 1,
+  "vueloId": 1,
+  "asientoId": 1,
+  "monto": 250.00
+}
+
+###
+### Error: reservación sin monto
+### Debe responder 400
+POST {{baseUrl}}/reservaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "pasajeroId": 1,
+  "vueloId": 1,
+  "asientoId": 1,
+  "metodoPago": "TARJETA"
+}
+
+###
+### Error: pasajero inexistente
+POST {{baseUrl}}/reservaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "pasajeroId": 99999,
+  "vueloId": 1,
+  "asientoId": 1,
+  "metodoPago": "TARJETA",
+  "monto": 250.00
+}
+
+###
+### Error: vuelo inexistente
+POST {{baseUrl}}/reservaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "pasajeroId": 1,
+  "vueloId": 99999,
+  "asientoId": 1,
+  "metodoPago": "TARJETA",
+  "monto": 250.00
+}
+
+###
+### Error: asiento inexistente
+POST {{baseUrl}}/reservaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "pasajeroId": 1,
+  "vueloId": 1,
+  "asientoId": 99999,
+  "metodoPago": "TARJETA",
+  "monto": 250.00
+}
+
+###
+### Error: asiento que no pertenece a la aeronave del vuelo
+POST {{baseUrl}}/reservaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "pasajeroId": 1,
+  "vueloId": 1,
+  "asientoId": 20,
+  "metodoPago": "TARJETA",
+  "monto": 250.00
+}
+
+###
+### Error: reservar asiento ocupado
+### Debe responder 409 si vueloId 1 y asientoId 1 ya existen
+POST {{baseUrl}}/reservaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "pasajeroId": 2,
+  "vueloId": 1,
+  "asientoId": 1,
+  "metodoPago": "EFECTIVO",
+  "monto": 250.00
+}
+
+
+########################################################
+# 7. PRUEBAS DE VALIDACIÓN DE CHECK-IN
+########################################################
+
+###
+### Error: check-in sin reservacionId
+POST {{baseUrl}}/checkin
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "empleadoId": 1
+}
+
+###
+### Error: check-in con reservación inexistente
+POST {{baseUrl}}/checkin
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "reservacionId": 99999,
+  "empleadoId": 1
+}
+
+###
+### Error: check-in con empleado inexistente
+POST {{baseUrl}}/checkin
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "reservacionId": 2,
+  "empleadoId": 99999
+}
+
+###
+### Error: check-in duplicado
+### Ejecute después de realizar el check-in de la reservación 1
+POST {{baseUrl}}/checkin
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "reservacionId": 1,
+  "empleadoId": 1
+}
+
+###
+### Error: check-in de reservación cancelada
+### Primero cancele la reservación 2
+POST {{baseUrl}}/checkin
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "reservacionId": 2,
+  "empleadoId": 1
+}
+
+
+########################################################
+# 8. PRUEBAS DE SEGURIDAD
+########################################################
+
+###
+### Listar reservaciones sin token
+### Debe responder 401
+GET {{baseUrl}}/reservaciones
+
+###
+### Consultar disponibilidad sin token
+### Debe responder 401
+GET {{baseUrl}}/vuelos/1/asientos
+
+###
+### Consultar comprobante sin token
+### Debe responder 401
+GET {{baseUrl}}/comprobantes/1
+
+###
+### Crear reservación con token inválido
+### Debe responder 401
+POST {{baseUrl}}/reservaciones
+Authorization: Bearer TOKEN_INVALIDO
+Content-Type: application/json
+
+{
+  "pasajeroId": 1,
+  "vueloId": 1,
+  "asientoId": 1,
+  "metodoPago": "TARJETA",
+  "monto": 250.00
+}
+
+###
+### Realizar check-in con token inválido
+### Debe responder 401
+POST {{baseUrl}}/checkin
+Authorization: Bearer TOKEN_INVALIDO
+Content-Type: application/json
+
+{
+  "reservacionId": 1,
+  "empleadoId": 1
+}
+
+
+########################################################
+# 9. ORDEN RECOMENDADO
+########################################################
+
+# 1. Crear pasajero.
+# 2. Crear aeropuertos.
+# 3. Crear aeronave.
+# 4. Crear asientos para la aeronave.
+# 5. Crear vuelo con esa aeronave.
+# 6. Consultar GET /vuelos/:vueloId/asientos.
+# 7. Crear reservación utilizando un asiento disponible.
+# 8. Consultar la reservación.
+# 9. Consultar el comprobante antes del check-in.
+# 10. Realizar el check-in.
+# 11. Consultar nuevamente la reservación.
+# 12. Consultar nuevamente el comprobante.

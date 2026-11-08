@@ -1,0 +1,393 @@
+@baseUrl = http://localhost:3000/api
+@token = PEGUE_TOKEN_AQUI
+
+########################################################
+# SUBSISTEMA 7: DASHBOARD Y REPORTES
+########################################################
+
+# Rutas disponibles:
+#
+# GET /api/dashboard
+# GET /api/reportes/vuelos
+# GET /api/reportes/pasajeros
+# GET /api/reportes/pilotos
+# GET /api/reportes/reservaciones
+#
+# Roles permitidos:
+#
+# - ADMIN_GENERAL
+# - ADMIN_AEROPUERTO
+#
+# No tienen acceso:
+#
+# - EMPLEADO
+# - PILOTO
+
+
+########################################################
+# 0. COMPROBAR EL BACKEND
+########################################################
+
+###
+### Verificar que la API esté funcionando
+GET {{baseUrl}}/salud
+
+
+########################################################
+# 1. AUTENTICACIÓN
+########################################################
+
+###
+### Login del Administrador General
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "correo": "admin@globalairport.com",
+  "password": "Admin12345"
+}
+
+###
+### Consultar usuario autenticado
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}
+
+
+########################################################
+# 2. DASHBOARD GENERAL
+########################################################
+
+###
+### Obtener dashboard general
+### Roles: ADMIN_GENERAL y ADMIN_AEROPUERTO
+GET {{baseUrl}}/dashboard
+Authorization: Bearer {{token}}
+
+# La respuesta puede incluir:
+#
+# - Cantidad total de aeropuertos
+# - Cantidad total de vuelos
+# - Cantidad total de pasajeros
+# - Cantidad total de reservaciones
+# - Cantidad de pilotos activos
+#
+# Ejemplo esperado:
+#
+# {
+#   "aeropuertos": 3,
+#   "vuelos": 15,
+#   "pasajeros": 80,
+#   "reservaciones": 120,
+#   "pilotosActivos": 12
+# }
+
+
+########################################################
+# 3. REPORTE DE VUELOS
+########################################################
+
+###
+### Obtener reporte general de vuelos
+### Roles: ADMIN_GENERAL y ADMIN_AEROPUERTO
+GET {{baseUrl}}/reportes/vuelos
+Authorization: Bearer {{token}}
+
+# La respuesta puede incluir:
+#
+# - Total de vuelos
+# - Vuelos agrupados por estado
+#
+# Estados posibles:
+#
+# - PROGRAMADO
+# - ABORDANDO
+# - EN_VUELO
+# - COMPLETADO
+# - CANCELADO
+#
+# Ejemplo esperado:
+#
+# {
+#   "total": 15,
+#   "porEstado": [
+#     {
+#       "estado": "PROGRAMADO",
+#       "_count": {
+#         "_all": 5
+#       }
+#     },
+#     {
+#       "estado": "COMPLETADO",
+#       "_count": {
+#         "_all": 10
+#       }
+#     }
+#   ]
+# }
+
+
+########################################################
+# 4. REPORTE DE PASAJEROS
+########################################################
+
+###
+### Obtener reporte general de pasajeros
+### Roles: ADMIN_GENERAL y ADMIN_AEROPUERTO
+GET {{baseUrl}}/reportes/pasajeros
+Authorization: Bearer {{token}}
+
+# La respuesta puede incluir:
+#
+# - Total de pasajeros
+# - Pasajeros activos
+#
+# Ejemplo esperado:
+#
+# {
+#   "total": 80,
+#   "activos": 75
+# }
+
+
+########################################################
+# 5. REPORTE DE PILOTOS
+########################################################
+
+###
+### Obtener reporte general de pilotos
+### Roles: ADMIN_GENERAL y ADMIN_AEROPUERTO
+GET {{baseUrl}}/reportes/pilotos
+Authorization: Bearer {{token}}
+
+# La respuesta puede incluir:
+#
+# - Total de pilotos
+# - Pilotos agrupados por estado
+# - Suma de horas de vuelo
+#
+# Ejemplo esperado:
+#
+# {
+#   "total": 12,
+#   "porEstado": [
+#     {
+#       "estado": "ACTIVO",
+#       "_count": {
+#         "_all": 10
+#       }
+#     },
+#     {
+#       "estado": "INACTIVO",
+#       "_count": {
+#         "_all": 2
+#       }
+#     }
+#   ],
+#   "horas": {
+#     "_sum": {
+#       "horasVuelo": 12500.50
+#     }
+#   }
+# }
+
+
+########################################################
+# 6. REPORTE DE RESERVACIONES
+########################################################
+
+###
+### Obtener reporte general de reservaciones
+### Roles: ADMIN_GENERAL y ADMIN_AEROPUERTO
+GET {{baseUrl}}/reportes/reservaciones
+Authorization: Bearer {{token}}
+
+# La respuesta puede incluir:
+#
+# - Total de reservaciones
+# - Reservaciones agrupadas por estado
+# - Monto acumulado
+#
+# Estados posibles:
+#
+# - CONFIRMADA
+# - CHECK_IN
+# - CANCELADA
+#
+# Ejemplo esperado:
+#
+# {
+#   "total": 120,
+#   "porEstado": [
+#     {
+#       "estado": "CONFIRMADA",
+#       "_count": {
+#         "_all": 50
+#       }
+#     },
+#     {
+#       "estado": "CHECK_IN",
+#       "_count": {
+#         "_all": 60
+#       }
+#     },
+#     {
+#       "estado": "CANCELADA",
+#       "_count": {
+#         "_all": 10
+#       }
+#     }
+#   ],
+#   "monto": {
+#     "_sum": {
+#       "monto": 32500.75
+#     }
+#   }
+# }
+
+
+########################################################
+# 7. PRUEBAS SIN AUTENTICACIÓN
+########################################################
+
+###
+### Dashboard sin token
+### Debe responder 401
+GET {{baseUrl}}/dashboard
+
+###
+### Reporte de vuelos sin token
+### Debe responder 401
+GET {{baseUrl}}/reportes/vuelos
+
+###
+### Reporte de pasajeros sin token
+### Debe responder 401
+GET {{baseUrl}}/reportes/pasajeros
+
+###
+### Reporte de pilotos sin token
+### Debe responder 401
+GET {{baseUrl}}/reportes/pilotos
+
+###
+### Reporte de reservaciones sin token
+### Debe responder 401
+GET {{baseUrl}}/reportes/reservaciones
+
+
+########################################################
+# 8. PRUEBAS CON TOKEN INVÁLIDO
+########################################################
+
+###
+### Dashboard con token inválido
+### Debe responder 401
+GET {{baseUrl}}/dashboard
+Authorization: Bearer TOKEN_INVALIDO
+
+###
+### Reporte de vuelos con token inválido
+### Debe responder 401
+GET {{baseUrl}}/reportes/vuelos
+Authorization: Bearer TOKEN_INVALIDO
+
+###
+### Reporte de pasajeros con token inválido
+### Debe responder 401
+GET {{baseUrl}}/reportes/pasajeros
+Authorization: Bearer TOKEN_INVALIDO
+
+###
+### Reporte de pilotos con token inválido
+### Debe responder 401
+GET {{baseUrl}}/reportes/pilotos
+Authorization: Bearer TOKEN_INVALIDO
+
+###
+### Reporte de reservaciones con token inválido
+### Debe responder 401
+GET {{baseUrl}}/reportes/reservaciones
+Authorization: Bearer TOKEN_INVALIDO
+
+
+########################################################
+# 9. PRUEBAS DE AUTORIZACIÓN POR ROL
+########################################################
+
+# Para validar estas pruebas:
+#
+# 1. Inicie sesión con un usuario EMPLEADO.
+# 2. Copie su JWT en @token.
+# 3. Ejecute las solicitudes.
+#
+# El resultado esperado es 403.
+
+
+###
+### Empleado intenta consultar dashboard
+### Debe responder 403
+GET {{baseUrl}}/dashboard
+Authorization: Bearer {{token}}
+
+###
+### Empleado intenta consultar reporte de vuelos
+### Debe responder 403
+GET {{baseUrl}}/reportes/vuelos
+Authorization: Bearer {{token}}
+
+###
+### Piloto intenta consultar reporte de pilotos
+### Debe responder 403
+GET {{baseUrl}}/reportes/pilotos
+Authorization: Bearer {{token}}
+
+###
+### Piloto intenta consultar reporte de reservaciones
+### Debe responder 403
+GET {{baseUrl}}/reportes/reservaciones
+Authorization: Bearer {{token}}
+
+
+########################################################
+# 10. EJECUTAR TODOS LOS REPORTES
+########################################################
+
+###
+### 1. Dashboard
+GET {{baseUrl}}/dashboard
+Authorization: Bearer {{token}}
+
+###
+### 2. Reporte de vuelos
+GET {{baseUrl}}/reportes/vuelos
+Authorization: Bearer {{token}}
+
+###
+### 3. Reporte de pasajeros
+GET {{baseUrl}}/reportes/pasajeros
+Authorization: Bearer {{token}}
+
+###
+### 4. Reporte de pilotos
+GET {{baseUrl}}/reportes/pilotos
+Authorization: Bearer {{token}}
+
+###
+### 5. Reporte de reservaciones
+GET {{baseUrl}}/reportes/reservaciones
+Authorization: Bearer {{token}}
+
+
+########################################################
+# 11. ORDEN RECOMENDADO
+########################################################
+
+# 1. Ejecutar POST /auth/login.
+# 2. Copiar el token JWT en @token.
+# 3. Ejecutar GET /auth/me.
+# 4. Confirmar que el rol sea:
+#    - ADMIN_GENERAL, o
+#    - ADMIN_AEROPUERTO.
+# 5. Ejecutar GET /dashboard.
+# 6. Ejecutar cada reporte.
+# 7. Comparar los resultados con los registros creados.

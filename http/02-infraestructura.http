@@ -1,0 +1,574 @@
+@baseUrl = http://localhost:3000/api
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiY29ycmVvIjoiYWRtaW5AZ2xvYmFsYWlycG9ydC5jb20iLCJyb2wiOiJBRE1JTl9HRU5FUkFMIiwiaWF0IjoxNzk0MDkwMDk4LCJleHAiOjE3OTQwOTcyOTh9.kU2Am2h2UwTNnZHMPRJubbfKIRoVd7ehL25lEiL6Fu0
+
+########################################################
+# SUBSISTEMA 2: INFRAESTRUCTURA AEROPORTUARIA
+########################################################
+
+########################################################
+# 0. VERIFICAR BACKEND
+########################################################
+
+###
+### Verificar que la API esté funcionando
+GET {{baseUrl}}/salud
+
+
+########################################################
+# 1. AEROPUERTOS
+########################################################
+# GET: cualquier usuario autenticado
+# POST, PATCH y DELETE:
+# - ADMIN_GENERAL
+# - ADMIN_AEROPUERTO
+########################################################
+
+###
+### Listar aeropuertos
+GET {{baseUrl}}/aeropuertos
+Authorization: Bearer {{token}}
+
+###
+### Obtener aeropuerto por ID
+GET {{baseUrl}}/aeropuertos/1
+Authorization: Bearer {{token}}
+
+###
+### Crear Aeropuerto Internacional Juan Santamaría
+POST {{baseUrl}}/aeropuertos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Aeropuerto Internacional Juan Santamaria",
+  "codigoIata": "SJSO",
+  "pais": "Costa Rica",
+  "ciudad": "Alajuela",
+  "direccion": "Alajuela, Costa Rica"
+}
+
+###
+### Crear Aeropuerto Internacional Daniel Oduber
+POST {{baseUrl}}/aeropuertos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Aeropuerto Internacional Daniel Oduber Quiros",
+  "codigoIata": "LIR",
+  "pais": "Costa Rica",
+  "ciudad": "Liberia",
+  "direccion": "Liberia, Guanacaste, Costa Rica"
+}
+
+###
+### Crear Aeropuerto Internacional Tobias Bolaños
+POST {{baseUrl}}/aeropuertos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Aeropuerto Internacional Tobias Bolaños",
+  "codigoIata": "SYQ",
+  "pais": "Costa Rica",
+  "ciudad": "San Jose",
+  "direccion": "Pavas, San Jose, Costa Rica"
+}
+
+###
+### Actualizar nombre del aeropuerto
+PATCH {{baseUrl}}/aeropuertos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Aeropuerto Internacional Juan Santamaria SJO"
+}
+
+###
+### Actualizar dirección del aeropuerto
+PATCH {{baseUrl}}/aeropuertos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "direccion": "Radial Francisco J. Orlich, Alajuela, Costa Rica"
+}
+
+###
+### Actualizar varios datos del aeropuerto
+PATCH {{baseUrl}}/aeropuertos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Aeropuerto Internacional Juan Santamaria",
+  "pais": "Costa Rica",
+  "ciudad": "Alajuela",
+  "direccion": "Alajuela, Costa Rica"
+}
+
+###
+### Eliminar aeropuerto
+### Puede fallar si tiene aeronaves, empleados, pilotos o vuelos relacionados
+DELETE {{baseUrl}}/aeropuertos/3
+Authorization: Bearer {{token}}
+
+
+########################################################
+# 2. ASIGNACIONES DE ADMINISTRADORES
+########################################################
+# GET: cualquier usuario autenticado
+# POST, PATCH y DELETE:
+# - únicamente ADMIN_GENERAL
+#
+# Antes de asignar un administrador deben existir:
+# 1. El aeropuerto
+# 2. El usuario
+# 3. El usuario debe tener rol ADMIN_AEROPUERTO
+########################################################
+
+###
+### Listar asignaciones de administradores
+GET {{baseUrl}}/asignaciones-administradores
+Authorization: Bearer {{token}}
+
+###
+### Obtener asignación por ID
+GET {{baseUrl}}/asignaciones-administradores/1
+Authorization: Bearer {{token}}
+
+###
+### Asignar gerente al aeropuerto
+POST {{baseUrl}}/asignaciones-administradores
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeropuertoId": 1,
+  "usuarioId": 2
+}
+
+###
+### Asignar gerente al aeropuerto de Liberia
+POST {{baseUrl}}/asignaciones-administradores
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeropuertoId": 2,
+  "usuarioId": 3
+}
+
+###
+### Cambiar el usuario administrador
+PATCH {{baseUrl}}/asignaciones-administradores/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "usuarioId": 4
+}
+
+###
+### Cambiar el aeropuerto administrado
+PATCH {{baseUrl}}/asignaciones-administradores/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeropuertoId": 2
+}
+
+###
+### Actualizar aeropuerto y administrador
+PATCH {{baseUrl}}/asignaciones-administradores/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeropuertoId": 2,
+  "usuarioId": 4
+}
+
+###
+### Eliminar asignación de administrador
+DELETE {{baseUrl}}/asignaciones-administradores/1
+Authorization: Bearer {{token}}
+
+
+########################################################
+# 3. AERONAVES
+########################################################
+# GET: cualquier usuario autenticado
+# POST, PATCH y DELETE:
+# - ADMIN_GENERAL
+# - ADMIN_AEROPUERTO
+#
+# El aeropuerto debe existir antes de crear la aeronave.
+########################################################
+
+###
+### Listar aeronaves
+GET {{baseUrl}}/aeronaves
+Authorization: Bearer {{token}}
+
+###
+### Obtener aeronave por ID
+GET {{baseUrl}}/aeronaves/1
+Authorization: Bearer {{token}}
+
+###
+### Crear aeronave Boeing 737
+POST {{baseUrl}}/aeronaves
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeropuertoId": 1,
+  "matricula": "TI-B737",
+  "modelo": "737-800",
+  "fabricante": "Boeing",
+  "capacidad": 189
+}
+
+###
+### Crear aeronave Airbus A320
+POST {{baseUrl}}/aeronaves
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeropuertoId": 1,
+  "matricula": "TI-A320",
+  "modelo": "A320-200",
+  "fabricante": "Airbus",
+  "capacidad": 180
+}
+
+###
+### Crear aeronave Embraer
+POST {{baseUrl}}/aeronaves
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeropuertoId": 2,
+  "matricula": "TI-E190",
+  "modelo": "E190",
+  "fabricante": "Embraer",
+  "capacidad": 100
+}
+
+###
+### Actualizar capacidad de aeronave
+PATCH {{baseUrl}}/aeronaves/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "capacidad": 186
+}
+
+###
+### Actualizar modelo de aeronave
+PATCH {{baseUrl}}/aeronaves/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "modelo": "737-800 NG"
+}
+
+###
+### Trasladar aeronave a otro aeropuerto
+PATCH {{baseUrl}}/aeronaves/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeropuertoId": 2
+}
+
+###
+### Actualizar datos de la aeronave
+PATCH {{baseUrl}}/aeronaves/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "matricula": "TI-B738",
+  "modelo": "737-800 NG",
+  "fabricante": "Boeing",
+  "capacidad": 186,
+  "aeropuertoId": 1
+}
+
+###
+### Eliminar aeronave
+### Puede fallar si tiene asientos o vuelos relacionados
+DELETE {{baseUrl}}/aeronaves/3
+Authorization: Bearer {{token}}
+
+
+########################################################
+# 4. ASIENTOS DE AERONAVE
+########################################################
+# GET: cualquier usuario autenticado
+# POST, PATCH y DELETE:
+# - ADMIN_GENERAL
+# - ADMIN_AEROPUERTO
+#
+# La aeronave debe existir antes de crear sus asientos.
+########################################################
+
+###
+### Listar asientos
+GET {{baseUrl}}/asientos
+Authorization: Bearer {{token}}
+
+###
+### Obtener asiento por ID
+GET {{baseUrl}}/asientos/1
+Authorization: Bearer {{token}}
+
+###
+### Crear asiento 1A
+POST {{baseUrl}}/asientos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeronaveId": 1,
+  "numero": "1A",
+  "clase": "EJECUTIVA"
+}
+
+###
+### Crear asiento 1B
+POST {{baseUrl}}/asientos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeronaveId": 1,
+  "numero": "1B",
+  "clase": "EJECUTIVA"
+}
+
+###
+### Crear asiento económico
+POST {{baseUrl}}/asientos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeronaveId": 1,
+  "numero": "10A",
+  "clase": "ECONOMICA"
+}
+
+###
+### Crear asiento sin clase
+### El modelo compartido solo exige aeronaveId y numero
+POST {{baseUrl}}/asientos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeronaveId": 1,
+  "numero": "10B"
+}
+
+###
+### Actualizar número del asiento
+PATCH {{baseUrl}}/asientos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "numero": "2A"
+}
+
+###
+### Actualizar clase del asiento
+PATCH {{baseUrl}}/asientos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "clase": "PRIMERA_CLASE"
+}
+
+###
+### Cambiar asiento de aeronave
+PATCH {{baseUrl}}/asientos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeronaveId": 2
+}
+
+###
+### Actualizar asiento completo
+PATCH {{baseUrl}}/asientos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeronaveId": 1,
+  "numero": "2A",
+  "clase": "EJECUTIVA"
+}
+
+###
+### Eliminar asiento
+### Puede fallar si está relacionado con una reservación
+DELETE {{baseUrl}}/asientos/3
+Authorization: Bearer {{token}}
+
+
+########################################################
+# 5. PRUEBAS DE VALIDACIÓN
+########################################################
+
+###
+### Error: crear aeropuerto sin código IATA
+### Debe responder 400
+POST {{baseUrl}}/aeropuertos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Aeropuerto Incompleto",
+  "pais": "Costa Rica",
+  "ciudad": "San Jose",
+  "direccion": "San Jose"
+}
+
+###
+### Error: crear aeropuerto con código IATA duplicado
+### Debe responder 409 si SJO ya existe
+POST {{baseUrl}}/aeropuertos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Aeropuerto Duplicado",
+  "codigoIata": "SJO",
+  "pais": "Costa Rica",
+  "ciudad": "Alajuela",
+  "direccion": "Alajuela"
+}
+
+###
+### Error: asignación sin aeropuertoId
+### Debe responder 400
+POST {{baseUrl}}/asignaciones-administradores
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "usuarioId": 2
+}
+
+###
+### Error: asignación sin usuarioId
+### Debe responder 400
+POST {{baseUrl}}/asignaciones-administradores
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeropuertoId": 1
+}
+
+###
+### Error: asignar usuario o aeropuerto inexistente
+POST {{baseUrl}}/asignaciones-administradores
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeropuertoId": 999,
+  "usuarioId": 999
+}
+
+###
+### Error: crear aeronave sin matrícula
+### Debe responder 400
+POST {{baseUrl}}/aeronaves
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeropuertoId": 1,
+  "modelo": "737-800",
+  "fabricante": "Boeing",
+  "capacidad": 189
+}
+
+###
+### Error: crear aeronave con aeropuerto inexistente
+POST {{baseUrl}}/aeronaves
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeropuertoId": 999,
+  "matricula": "TI-ERROR",
+  "modelo": "737",
+  "fabricante": "Boeing",
+  "capacidad": 180
+}
+
+###
+### Error: crear asiento sin número
+### Debe responder 400
+POST {{baseUrl}}/asientos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeronaveId": 1
+}
+
+###
+### Error: crear asiento con aeronave inexistente
+POST {{baseUrl}}/asientos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeronaveId": 999,
+  "numero": "1A",
+  "clase": "ECONOMICA"
+}
+
+###
+### Error: consultar aeropuertos sin token
+### Debe responder 401
+GET {{baseUrl}}/aeropuertos
+
+###
+### Error: consultar aeronaves con token inválido
+### Debe responder 401
+GET {{baseUrl}}/aeronaves
+Authorization: Bearer TOKEN_INVALIDO
+
+
+########################################################
+# 6. ORDEN RECOMENDADO
+########################################################
+
+# 1. Login como ADMIN_GENERAL
+# 2. Copiar el JWT en @token
+# 3. Crear aeropuertos
+# 4. Crear usuario con rol ADMIN_AEROPUERTO
+# 5. Asignar el usuario administrador al aeropuerto
+# 6. Crear aeronaves
+# 7. Crear asientos
+# 8. Consultar los registros
+# 9. Actualizar los registros
+# 10. Eliminar únicamente registros de prueba

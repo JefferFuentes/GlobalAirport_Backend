@@ -1,0 +1,2 @@
+﻿const r=require("./repository"),{codigo}=require("../../../../shared/utils/codigos");exports.listar=r.listar;exports.obtener=r.obtener;exports.crear=async d=>{const [v,a]=await Promise.all([r.vuelo(d.vueloId),r.asiento(d.asientoId)]);if(!v||!a||a.aeronaveId!==v.aeronaveId){const e=new Error("Asiento no pertenece a aeronave del vuelo");e.status=400;throw e}return r.crear({...d,codigo:codigo("RES")})};exports.actualizar=r.actualizar;exports.cancelar=(id,motivo)=>r.actualizar(id,{estado:"CANCELADA",canceladaEn:new Date(),motivoCancelacion:motivo||null});
+

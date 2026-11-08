@@ -1,0 +1,202 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum EstadoGeneral {
+  ACTIVO
+  INACTIVO
+}
+
+enum EstadoVuelo {
+  PROGRAMADO
+  ABORDANDO
+  EN_VUELO
+  COMPLETADO
+  CANCELADO
+}
+
+enum EstadoReservacion {
+  CONFIRMADA
+  CHECK_IN
+  CANCELADA
+}
+
+model Rol {
+  id      Int       @id @default(autoincrement())
+  codigo  String    @unique
+  nombre  String
+  usuarios Usuario[]
+}
+
+model Usuario {
+  id                      Int                      @id @default(autoincrement())
+  nombreCompleto          String
+  correo                  String                   @unique
+  passwordHash            String
+  telefono                String?
+  estado                  EstadoGeneral            @default(ACTIVO)
+  rolId                   Int
+  rol                     Rol                      @relation(fields: [rolId], references: [id])
+  empleado                Empleado?
+  piloto                  Piloto?
+  aeropuertosAdministrados AeropuertoAdministrador[]
+  creadoEn                DateTime                 @default(now())
+  actualizadoEn           DateTime                 @updatedAt
+  desactivadoEn           DateTime?
+}
+
+model Aeropuerto {
+  id             Int                      @id @default(autoincrement())
+  nombre         String
+  codigoIata     String                   @unique
+  pais           String
+  ciudad         String
+  direccion      String
+  administradores AeropuertoAdministrador[]
+  empleados      Empleado[]
+  pilotos        Piloto[]
+  aeronaves      Aeronave[]
+  vuelosOrigen   Vuelo[]                  @relation("Origen")
+  vuelosDestino  Vuelo[]                  @relation("Destino")
+}
+
+model AeropuertoAdministrador {
+  id           Int        @id @default(autoincrement())
+  aeropuertoId Int
+  usuarioId    Int
+  aeropuerto   Aeropuerto @relation(fields: [aeropuertoId], references: [id], onDelete: Cascade)
+  usuario      Usuario    @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@unique([aeropuertoId, usuarioId])
+}
+
+model Empleado {
+  id             Int       @id @default(autoincrement())
+  usuarioId      Int       @unique
+  aeropuertoId   Int
+  numeroEmpleado String    @unique
+  puesto         String
+  usuario        Usuario   @relation(fields: [usuarioId], references: [id])
+  aeropuerto     Aeropuerto @relation(fields: [aeropuertoId], references: [id])
+  checkIns       CheckIn[]
+}
+
+model Pasajero {
+  id              Int           @id @default(autoincrement())
+  nombreCompleto  String
+  tipoDocumento   String
+  numeroDocumento String        @unique
+  nacionalidad    String
+  fechaNacimiento DateTime
+  correo          String
+  estado          EstadoGeneral @default(ACTIVO)
+  reservaciones   Reservacion[]
+}
+
+model Aeronave {
+  id           Int              @id @default(autoincrement())
+  aeropuertoId Int
+  matricula    String           @unique
+  modelo       String
+  fabricante   String
+  capacidad    Int
+  aeropuerto   Aeropuerto       @relation(fields: [aeropuertoId], references: [id])
+  asientos     AsientoAeronave[]
+  vuelos       Vuelo[]
+}
+
+model AsientoAeronave {
+  id           Int          @id @default(autoincrement())
+  aeronaveId   Int
+  numero       String
+  aeronave     Aeronave     @relation(fields: [aeronaveId], references: [id], onDelete: Cascade)
+  reservaciones Reservacion[]
+
+  @@unique([aeronaveId, numero])
+}
+
+model Piloto {
+  id             Int              @id @default(autoincrement())
+  usuarioId      Int              @unique
+  aeropuertoId   Int
+  numeroLicencia String           @unique
+  nacionalidad   String
+  fechaNacimiento DateTime
+  estado         EstadoGeneral    @default(ACTIVO)
+  horasVuelo     Decimal          @default(0) @db.Decimal(10, 2)
+  usuario        Usuario          @relation(fields: [usuarioId], references: [id])
+  aeropuerto     Aeropuerto       @relation(fields: [aeropuertoId], references: [id])
+  vuelos         VueloPiloto[]
+  observaciones  ObservacionVuelo[]
+}
+
+model Vuelo {
+  id                  Int              @id @default(autoincrement())
+  numeroVuelo         String           @unique
+  aeropuertoOrigenId  Int
+  aeropuertoDestinoId Int
+  aeronaveId          Int
+  salidaProgramada    DateTime
+  llegadaProgramada   DateTime
+  estado              EstadoVuelo      @default(PROGRAMADO)
+  aeropuertoOrigen    Aeropuerto       @relation("Origen", fields: [aeropuertoOrigenId], references: [id])
+  aeropuertoDestino   Aeropuerto       @relation("Destino", fields: [aeropuertoDestinoId], references: [id])
+  aeronave            Aeronave         @relation(fields: [aeronaveId], references: [id])
+  pilotos             VueloPiloto[]
+  observaciones       ObservacionVuelo[]
+  reservaciones       Reservacion[]
+}
+
+model VueloPiloto {
+  id       Int    @id @default(autoincrement())
+  vueloId  Int
+  pilotoId Int
+  vuelo    Vuelo  @relation(fields: [vueloId], references: [id], onDelete: Cascade)
+  piloto   Piloto @relation(fields: [pilotoId], references: [id], onDelete: Cascade)
+
+  @@unique([vueloId, pilotoId])
+}
+
+model ObservacionVuelo {
+  id         Int      @id @default(autoincrement())
+  vueloId    Int
+  pilotoId   Int
+  observacion String
+  creadoEn   DateTime @default(now())
+  vuelo      Vuelo    @relation(fields: [vueloId], references: [id], onDelete: Cascade)
+  piloto     Piloto   @relation(fields: [pilotoId], references: [id])
+}
+
+model Reservacion {
+  id               Int                @id @default(autoincrement())
+  codigo           String             @unique
+  pasajeroId       Int
+  vueloId          Int
+  asientoId        Int
+  metodoPago       String
+  monto            Decimal            @db.Decimal(12, 2)
+  estado           EstadoReservacion  @default(CONFIRMADA)
+  canceladaEn      DateTime?
+  motivoCancelacion String?
+  pasajero         Pasajero           @relation(fields: [pasajeroId], references: [id])
+  vuelo            Vuelo              @relation(fields: [vueloId], references: [id])
+  asiento          AsientoAeronave    @relation(fields: [asientoId], references: [id])
+  checkIn          CheckIn?
+
+  @@unique([vueloId, asientoId])
+}
+
+model CheckIn {
+  id             Int       @id @default(autoincrement())
+  reservacionId  Int       @unique
+  empleadoId     Int?
+  codigoAbordaje String    @unique
+  creadoEn       DateTime  @default(now())
+  reservacion    Reservacion @relation(fields: [reservacionId], references: [id])
+  empleado       Empleado? @relation(fields: [empleadoId], references: [id])
+}

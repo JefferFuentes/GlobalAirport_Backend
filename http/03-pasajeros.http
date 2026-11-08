@@ -1,0 +1,379 @@
+@baseUrl = http://localhost:3000/api
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiY29ycmVvIjoiYWRtaW5AZ2xvYmFsYWlycG9ydC5jb20iLCJyb2wiOiJBRE1JTl9HRU5FUkFMIiwiaWF0IjoxNzk0MDkwMDk4LCJleHAiOjE3OTQwOTcyOTh9.kU2Am2h2UwTNnZHMPRJubbfKIRoVd7ehL25lEiL6Fu0
+
+########################################################
+# SUBSISTEMA 3: GESTIÓN DE PASAJEROS
+########################################################
+
+# Rutas disponibles:
+#
+# GET    /api/pasajeros
+# GET    /api/pasajeros/:id
+# POST   /api/pasajeros
+# PATCH  /api/pasajeros/:id
+# DELETE /api/pasajeros/:id
+#
+# Autorización:
+#
+# GET:
+# - Cualquier usuario autenticado
+#
+# POST, PATCH y DELETE:
+# - ADMIN_GENERAL
+# - ADMIN_AEROPUERTO
+# - EMPLEADO
+
+
+########################################################
+# 0. VERIFICAR EL BACKEND
+########################################################
+
+###
+### Verificar que la API esté funcionando
+GET {{baseUrl}}/salud
+
+
+########################################################
+# 1. AUTENTICACIÓN
+########################################################
+
+###
+### Login del Administrador General
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "correo": "admin@globalairport.com",
+  "password": "Admin12345"
+}
+
+###
+### Verificar el usuario autenticado
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}
+
+
+########################################################
+# 2. CONSULTAR PASAJEROS
+########################################################
+
+###
+### Listar todos los pasajeros
+GET {{baseUrl}}/pasajeros
+Authorization: Bearer {{token}}
+
+###
+### Obtener pasajero por ID
+GET {{baseUrl}}/pasajeros/1
+Authorization: Bearer {{token}}
+
+###
+### Consultar pasajero inexistente
+### Debe responder 404 si el controlador lo maneja
+GET {{baseUrl}}/pasajeros/99999
+Authorization: Bearer {{token}}
+
+
+########################################################
+# 3. CREAR PASAJEROS
+########################################################
+
+###
+### Crear pasajero costarricense con cédula
+POST {{baseUrl}}/pasajeros
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Ana Maria Mora Vargas",
+  "tipoDocumento": "CEDULA",
+  "numeroDocumento": "101110111",
+  "nacionalidad": "Costa Rica",
+  "fechaNacimiento": "1998-05-10",
+  "correo": "ana.mora@email.com"
+}
+
+###
+### Crear pasajero costarricense con pasaporte
+POST {{baseUrl}}/pasajeros
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Carlos Alberto Ramirez Soto",
+  "tipoDocumento": "PASAPORTE",
+  "numeroDocumento": "CR1234567",
+  "nacionalidad": "Costa Rica",
+  "fechaNacimiento": "1990-09-21",
+  "correo": "carlos.ramirez@email.com"
+}
+
+###
+### Crear pasajero extranjero
+POST {{baseUrl}}/pasajeros
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Michael Robert Johnson",
+  "tipoDocumento": "PASAPORTE",
+  "numeroDocumento": "US987654321",
+  "nacionalidad": "Estados Unidos",
+  "fechaNacimiento": "1985-11-15",
+  "correo": "michael.johnson@email.com"
+}
+
+###
+### Crear pasajero menor de edad
+POST {{baseUrl}}/pasajeros
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Sofia Herrera Castro",
+  "tipoDocumento": "PASAPORTE",
+  "numeroDocumento": "CR-MENOR-001",
+  "nacionalidad": "Costa Rica",
+  "fechaNacimiento": "2012-06-20",
+  "correo": "sofia.herrera@email.com"
+}
+
+
+########################################################
+# 4. ACTUALIZAR PASAJEROS
+########################################################
+
+###
+### Actualizar correo del pasajero
+PATCH {{baseUrl}}/pasajeros/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "correo": "ana.mora.actualizado@email.com"
+}
+
+###
+### Actualizar nombre completo
+PATCH {{baseUrl}}/pasajeros/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Ana Maria Mora Vargas de Rodriguez"
+}
+
+###
+### Actualizar nacionalidad
+PATCH {{baseUrl}}/pasajeros/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nacionalidad": "Costa Rica"
+}
+
+###
+### Actualizar documento
+PATCH {{baseUrl}}/pasajeros/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tipoDocumento": "PASAPORTE",
+  "numeroDocumento": "CR7654321"
+}
+
+###
+### Actualizar fecha de nacimiento
+PATCH {{baseUrl}}/pasajeros/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "fechaNacimiento": "1998-05-11"
+}
+
+###
+### Actualizar todos los datos del pasajero
+PATCH {{baseUrl}}/pasajeros/2
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Ana Maria Mora Vargas",
+  "tipoDocumento": "CEDULA",
+  "numeroDocumento": "101110111",
+  "nacionalidad": "Costa Rica",
+  "fechaNacimiento": "1998-05-10",
+  "correo": "ana.mora@email.com"
+}
+
+
+########################################################
+# 5. ELIMINAR PASAJEROS
+########################################################
+
+###
+### Eliminar pasajero por ID
+### Puede fallar si tiene reservaciones relacionadas
+DELETE {{baseUrl}}/pasajeros/4
+Authorization: Bearer {{token}}
+
+###
+### Intentar eliminar pasajero inexistente
+DELETE {{baseUrl}}/pasajeros/99999
+Authorization: Bearer {{token}}
+
+
+########################################################
+# 6. PRUEBAS DE VALIDACIÓN
+########################################################
+
+###
+### Error: crear pasajero sin nombre
+### Debe responder 400
+POST {{baseUrl}}/pasajeros
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tipoDocumento": "CEDULA",
+  "numeroDocumento": "202220222",
+  "nacionalidad": "Costa Rica",
+  "fechaNacimiento": "1995-01-01",
+  "correo": "incompleto@email.com"
+}
+
+###
+### Error: crear pasajero sin tipo de documento
+### Debe responder 400
+POST {{baseUrl}}/pasajeros
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Pasajero Sin Tipo Documento",
+  "numeroDocumento": "303330333",
+  "nacionalidad": "Costa Rica",
+  "fechaNacimiento": "1995-01-01",
+  "correo": "sin.tipo@email.com"
+}
+
+###
+### Error: crear pasajero sin número de documento
+### Debe responder 400
+POST {{baseUrl}}/pasajeros
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Pasajero Sin Documento",
+  "tipoDocumento": "CEDULA",
+  "nacionalidad": "Costa Rica",
+  "fechaNacimiento": "1995-01-01",
+  "correo": "sin.documento@email.com"
+}
+
+###
+### Error: crear pasajero sin nacionalidad
+### Debe responder 400
+POST {{baseUrl}}/pasajeros
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Pasajero Sin Nacionalidad",
+  "tipoDocumento": "PASAPORTE",
+  "numeroDocumento": "TEST-NAC-001",
+  "fechaNacimiento": "1995-01-01",
+  "correo": "sin.nacionalidad@email.com"
+}
+
+###
+### Error: crear pasajero sin fecha de nacimiento
+### Debe responder 400
+POST {{baseUrl}}/pasajeros
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Pasajero Sin Fecha",
+  "tipoDocumento": "CEDULA",
+  "numeroDocumento": "404440444",
+  "nacionalidad": "Costa Rica",
+  "correo": "sin.fecha@email.com"
+}
+
+###
+### Error: crear pasajero sin correo
+### Debe responder 400
+POST {{baseUrl}}/pasajeros
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Pasajero Sin Correo",
+  "tipoDocumento": "CEDULA",
+  "numeroDocumento": "505550555",
+  "nacionalidad": "Costa Rica",
+  "fechaNacimiento": "1995-01-01"
+}
+
+###
+### Error: número de documento duplicado
+### Debe responder 409 si el documento ya existe
+POST {{baseUrl}}/pasajeros
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Pasajero Documento Duplicado",
+  "tipoDocumento": "CEDULA",
+  "numeroDocumento": "101110111",
+  "nacionalidad": "Costa Rica",
+  "fechaNacimiento": "1990-01-01",
+  "correo": "duplicado@email.com"
+}
+
+###
+### Error: listar pasajeros sin token
+### Debe responder 401
+GET {{baseUrl}}/pasajeros
+
+###
+### Error: listar pasajeros con token inválido
+### Debe responder 401
+GET {{baseUrl}}/pasajeros
+Authorization: Bearer TOKEN_INVALIDO
+
+###
+### Error: crear pasajero sin token
+### Debe responder 401
+POST {{baseUrl}}/pasajeros
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Pasajero Sin Token",
+  "tipoDocumento": "CEDULA",
+  "numeroDocumento": "606660666",
+  "nacionalidad": "Costa Rica",
+  "fechaNacimiento": "1990-01-01",
+  "correo": "sin.token@email.com"
+}
+
+
+########################################################
+# 7. ORDEN RECOMENDADO DE PRUEBA
+########################################################
+
+# 1. GET  /salud
+# 2. POST /auth/login
+# 3. Copiar el JWT en @token
+# 4. GET  /auth/me
+# 5. GET  /pasajeros
+# 6. POST /pasajeros
+# 7. Copiar el ID creado
+# 8. GET  /pasajeros/{id}
+# 9. PATCH /pasajeros/{id}
+# 10. DELETE /pasajeros/{id} solamente para datos de prueba

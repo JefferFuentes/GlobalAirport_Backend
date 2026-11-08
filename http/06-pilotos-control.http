@@ -1,0 +1,707 @@
+@baseUrl = http://localhost:3000/api
+@token = PEGUE_TOKEN_AQUI
+
+########################################################
+# SUBSISTEMA 6: PILOTOS Y CONTROL OPERACIONAL
+########################################################
+
+# Rutas:
+#
+# /api/pilotos
+# /api/observaciones
+#
+# Antes de crear un piloto deben existir:
+# 1. Usuario con rol PILOTO
+# 2. Aeropuerto
+#
+# Antes de crear una observación deben existir:
+# 1. Vuelo
+# 2. Piloto
+
+
+########################################################
+# 0. COMPROBAR EL BACKEND
+########################################################
+
+###
+### Verificar que la API esté funcionando
+GET {{baseUrl}}/salud
+
+
+########################################################
+# 1. AUTENTICACIÓN
+########################################################
+
+###
+### Login del Administrador General
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "correo": "admin@globalairport.com",
+  "password": "Admin12345"
+}
+
+###
+### Consultar usuario autenticado
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}
+
+
+########################################################
+# 2. PILOTOS
+########################################################
+
+# GET:
+# - Cualquier usuario autenticado
+#
+# POST, PATCH y DELETE:
+# - ADMIN_GENERAL
+# - ADMIN_AEROPUERTO
+#
+# Para crear un piloto:
+# 1. Crear primero un usuario con rol PILOTO.
+# 2. Crear el aeropuerto.
+# 3. Usar usuarioId y aeropuertoId en POST /pilotos.
+
+
+########################################################
+# 2.1 CONSULTAR PILOTOS
+########################################################
+
+###
+### Listar todos los pilotos
+GET {{baseUrl}}/pilotos
+Authorization: Bearer {{token}}
+
+###
+### Obtener piloto por ID
+GET {{baseUrl}}/pilotos/1
+Authorization: Bearer {{token}}
+
+###
+### Consultar piloto inexistente
+GET {{baseUrl}}/pilotos/99999
+Authorization: Bearer {{token}}
+
+
+########################################################
+# 2.2 CREAR USUARIO PARA PILOTO
+########################################################
+
+# Esta operación pertenece al Subsistema 1.
+# Solo ADMIN_GENERAL puede crear usuarios.
+# Consulte primero GET /roles para identificar el ID
+# correspondiente al rol PILOTO.
+
+###
+### Consultar roles
+GET {{baseUrl}}/roles
+Authorization: Bearer {{token}}
+
+###
+### Crear usuario para el piloto
+POST {{baseUrl}}/usuarios
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Daniel Vargas Mora",
+  "correo": "daniel.piloto@globalairport.com",
+  "password": "Piloto123",
+  "telefono": "88881111",
+  "rolId": 4
+}
+
+###
+### Crear segundo usuario para piloto
+POST {{baseUrl}}/usuarios
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Maria Gonzalez Soto",
+  "correo": "maria.piloto@globalairport.com",
+  "password": "Piloto456",
+  "telefono": "88882222",
+  "rolId": 4
+}
+
+
+########################################################
+# 2.3 CREAR PILOTOS
+########################################################
+
+###
+### Crear piloto costarricense
+### Use el usuarioId devuelto por POST /usuarios
+POST {{baseUrl}}/pilotos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "usuarioId": 2,
+  "aeropuertoId": 1,
+  "numeroLicencia": "PIL-CR-001",
+  "nacionalidad": "Costa Rica",
+  "fechaNacimiento": "1985-06-15"
+}
+
+###
+### Crear segundo piloto
+POST {{baseUrl}}/pilotos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "usuarioId": 3,
+  "aeropuertoId": 1,
+  "numeroLicencia": "PIL-CR-002",
+  "nacionalidad": "Costa Rica",
+  "fechaNacimiento": "1990-10-21"
+}
+
+###
+### Crear piloto extranjero
+POST {{baseUrl}}/pilotos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "usuarioId": 4,
+  "aeropuertoId": 2,
+  "numeroLicencia": "FAA-US-50879",
+  "nacionalidad": "Estados Unidos",
+  "fechaNacimiento": "1988-02-10"
+}
+
+
+########################################################
+# 2.4 ACTUALIZAR PILOTOS
+########################################################
+
+###
+### Actualizar número de licencia
+PATCH {{baseUrl}}/pilotos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "numeroLicencia": "PIL-CR-2026-001"
+}
+
+###
+### Actualizar aeropuerto base
+PATCH {{baseUrl}}/pilotos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeropuertoId": 2
+}
+
+###
+### Actualizar nacionalidad
+PATCH {{baseUrl}}/pilotos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nacionalidad": "Costa Rica"
+}
+
+###
+### Actualizar fecha de nacimiento
+PATCH {{baseUrl}}/pilotos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "fechaNacimiento": "1985-06-16"
+}
+
+###
+### Actualizar horas de vuelo
+PATCH {{baseUrl}}/pilotos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "horasVuelo": 1250.50
+}
+
+###
+### Cambiar estado del piloto
+PATCH {{baseUrl}}/pilotos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "estado": "INACTIVO"
+}
+
+###
+### Reactivar piloto
+PATCH {{baseUrl}}/pilotos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "estado": "ACTIVO"
+}
+
+###
+### Actualizar varios datos del piloto
+PATCH {{baseUrl}}/pilotos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeropuertoId": 1,
+  "numeroLicencia": "PIL-CR-2026-001",
+  "nacionalidad": "Costa Rica",
+  "fechaNacimiento": "1985-06-15",
+  "horasVuelo": 1500.75,
+  "estado": "ACTIVO"
+}
+
+
+########################################################
+# 2.5 ELIMINAR PILOTOS
+########################################################
+
+###
+### Eliminar piloto
+### Puede fallar si tiene vuelos u observaciones relacionadas
+DELETE {{baseUrl}}/pilotos/3
+Authorization: Bearer {{token}}
+
+###
+### Eliminar piloto inexistente
+DELETE {{baseUrl}}/pilotos/99999
+Authorization: Bearer {{token}}
+
+
+########################################################
+# 3. OBSERVACIONES DE VUELO
+########################################################
+
+# GET:
+# - Cualquier usuario autenticado
+#
+# POST, PATCH y DELETE:
+# - PILOTO
+# - ADMIN_AEROPUERTO
+#
+# IMPORTANTE:
+# ADMIN_GENERAL no aparece autorizado para crear,
+# actualizar o eliminar observaciones.
+#
+# Para crear una observación deben existir:
+# - vueloId
+# - pilotoId
+
+
+########################################################
+# 3.1 CONSULTAR OBSERVACIONES
+########################################################
+
+###
+### Listar observaciones de vuelo
+GET {{baseUrl}}/observaciones
+Authorization: Bearer {{token}}
+
+###
+### Obtener observación por ID
+GET {{baseUrl}}/observaciones/1
+Authorization: Bearer {{token}}
+
+###
+### Obtener observación inexistente
+GET {{baseUrl}}/observaciones/99999
+Authorization: Bearer {{token}}
+
+
+########################################################
+# 3.2 CREAR OBSERVACIONES
+########################################################
+
+###
+### Registrar vuelo sin incidentes
+### Requiere token de PILOTO o ADMIN_AEROPUERTO
+POST {{baseUrl}}/observaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vueloId": 1,
+  "pilotoId": 1,
+  "observacion": "Vuelo completado sin incidentes operativos."
+}
+
+###
+### Registrar condiciones climáticas
+POST {{baseUrl}}/observaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vueloId": 1,
+  "pilotoId": 1,
+  "observacion": "Se presentaron lluvias moderadas durante la aproximacion."
+}
+
+###
+### Registrar turbulencia
+POST {{baseUrl}}/observaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vueloId": 2,
+  "pilotoId": 2,
+  "observacion": "Se presento turbulencia moderada durante aproximadamente quince minutos."
+}
+
+###
+### Registrar incidencia técnica
+POST {{baseUrl}}/observaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vueloId": 2,
+  "pilotoId": 2,
+  "observacion": "Se detecto una alerta preventiva del sistema hidraulico durante la inspeccion posterior al vuelo."
+}
+
+###
+### Registrar retraso operacional
+POST {{baseUrl}}/observaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vueloId": 3,
+  "pilotoId": 1,
+  "observacion": "La salida se retraso treinta minutos debido a condiciones meteorologicas."
+}
+
+
+########################################################
+# 3.3 ACTUALIZAR OBSERVACIONES
+########################################################
+
+###
+### Corregir descripción de la observación
+PATCH {{baseUrl}}/observaciones/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "observacion": "Vuelo completado sin incidentes operativos ni técnicos."
+}
+
+###
+### Cambiar piloto relacionado
+PATCH {{baseUrl}}/observaciones/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "pilotoId": 2
+}
+
+###
+### Cambiar vuelo relacionado
+PATCH {{baseUrl}}/observaciones/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vueloId": 2
+}
+
+###
+### Actualizar toda la observación
+PATCH {{baseUrl}}/observaciones/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vueloId": 1,
+  "pilotoId": 1,
+  "observacion": "Vuelo completado sin incidentes. No se requirio mantenimiento adicional."
+}
+
+
+########################################################
+# 3.4 ELIMINAR OBSERVACIONES
+########################################################
+
+###
+### Eliminar observación
+DELETE {{baseUrl}}/observaciones/1
+Authorization: Bearer {{token}}
+
+###
+### Eliminar observación inexistente
+DELETE {{baseUrl}}/observaciones/99999
+Authorization: Bearer {{token}}
+
+
+########################################################
+# 4. PRUEBAS DE VALIDACIÓN DE PILOTOS
+########################################################
+
+###
+### Error: crear piloto sin usuarioId
+### Debe responder 400
+POST {{baseUrl}}/pilotos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeropuertoId": 1,
+  "numeroLicencia": "PIL-ERROR-001",
+  "nacionalidad": "Costa Rica",
+  "fechaNacimiento": "1985-06-15"
+}
+
+###
+### Error: crear piloto sin aeropuertoId
+### Debe responder 400
+POST {{baseUrl}}/pilotos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "usuarioId": 2,
+  "numeroLicencia": "PIL-ERROR-002",
+  "nacionalidad": "Costa Rica",
+  "fechaNacimiento": "1985-06-15"
+}
+
+###
+### Error: crear piloto sin licencia
+### Debe responder 400
+POST {{baseUrl}}/pilotos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "usuarioId": 2,
+  "aeropuertoId": 1,
+  "nacionalidad": "Costa Rica",
+  "fechaNacimiento": "1985-06-15"
+}
+
+###
+### Error: crear piloto sin nacionalidad
+### Debe responder 400
+POST {{baseUrl}}/pilotos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "usuarioId": 2,
+  "aeropuertoId": 1,
+  "numeroLicencia": "PIL-ERROR-003",
+  "fechaNacimiento": "1985-06-15"
+}
+
+###
+### Error: crear piloto sin fecha de nacimiento
+### Debe responder 400
+POST {{baseUrl}}/pilotos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "usuarioId": 2,
+  "aeropuertoId": 1,
+  "numeroLicencia": "PIL-ERROR-004",
+  "nacionalidad": "Costa Rica"
+}
+
+###
+### Error: crear piloto con usuario inexistente
+POST {{baseUrl}}/pilotos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "usuarioId": 99999,
+  "aeropuertoId": 1,
+  "numeroLicencia": "PIL-ERROR-005",
+  "nacionalidad": "Costa Rica",
+  "fechaNacimiento": "1985-06-15"
+}
+
+###
+### Error: crear piloto con aeropuerto inexistente
+POST {{baseUrl}}/pilotos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "usuarioId": 2,
+  "aeropuertoId": 99999,
+  "numeroLicencia": "PIL-ERROR-006",
+  "nacionalidad": "Costa Rica",
+  "fechaNacimiento": "1985-06-15"
+}
+
+###
+### Error: licencia duplicada
+### Debe responder 409 si PIL-CR-001 ya existe
+POST {{baseUrl}}/pilotos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "usuarioId": 3,
+  "aeropuertoId": 1,
+  "numeroLicencia": "PIL-CR-001",
+  "nacionalidad": "Costa Rica",
+  "fechaNacimiento": "1990-10-21"
+}
+
+###
+### Error: crear dos perfiles para el mismo usuario
+### usuarioId es único en el esquema
+POST {{baseUrl}}/pilotos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "usuarioId": 2,
+  "aeropuertoId": 1,
+  "numeroLicencia": "PIL-OTRA-001",
+  "nacionalidad": "Costa Rica",
+  "fechaNacimiento": "1985-06-15"
+}
+
+
+########################################################
+# 5. PRUEBAS DE VALIDACIÓN DE OBSERVACIONES
+########################################################
+
+###
+### Error: observación sin vueloId
+### Debe responder 400
+POST {{baseUrl}}/observaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "pilotoId": 1,
+  "observacion": "Observacion sin vuelo."
+}
+
+###
+### Error: observación sin pilotoId
+### Debe responder 400
+POST {{baseUrl}}/observaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vueloId": 1,
+  "observacion": "Observacion sin piloto."
+}
+
+###
+### Error: observación sin texto
+### Debe responder 400
+POST {{baseUrl}}/observaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vueloId": 1,
+  "pilotoId": 1
+}
+
+###
+### Error: vuelo inexistente
+POST {{baseUrl}}/observaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vueloId": 99999,
+  "pilotoId": 1,
+  "observacion": "Vuelo inexistente."
+}
+
+###
+### Error: piloto inexistente
+POST {{baseUrl}}/observaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vueloId": 1,
+  "pilotoId": 99999,
+  "observacion": "Piloto inexistente."
+}
+
+
+########################################################
+# 6. PRUEBAS DE SEGURIDAD
+########################################################
+
+###
+### Consultar pilotos sin token
+### Debe responder 401
+GET {{baseUrl}}/pilotos
+
+###
+### Consultar observaciones sin token
+### Debe responder 401
+GET {{baseUrl}}/observaciones
+
+###
+### Crear piloto con token inválido
+### Debe responder 401
+POST {{baseUrl}}/pilotos
+Authorization: Bearer TOKEN_INVALIDO
+Content-Type: application/json
+
+{
+  "usuarioId": 2,
+  "aeropuertoId": 1,
+  "numeroLicencia": "PIL-TOKEN-ERROR",
+  "nacionalidad": "Costa Rica",
+  "fechaNacimiento": "1985-06-15"
+}
+
+###
+### Crear observación con token inválido
+### Debe responder 401
+POST {{baseUrl}}/observaciones
+Authorization: Bearer TOKEN_INVALIDO
+Content-Type: application/json
+
+{
+  "vueloId": 1,
+  "pilotoId": 1,
+  "observacion": "Prueba con token inválido."
+}
+
+
+########################################################
+# 7. ORDEN RECOMENDADO
+########################################################
+
+# 1. Login como ADMIN_GENERAL.
+# 2. Consultar GET /roles y localizar el rol PILOTO.
+# 3. Crear un aeropuerto.
+# 4. Crear usuario con rol PILOTO.
+# 5. Crear perfil del piloto.
+# 6. Crear aeronave y vuelo.
+# 7. Asignar el piloto al vuelo.
+# 8. Iniciar sesión con el usuario PILOTO.
+# 9. Copiar el token del piloto.
+# 10. Crear observación usando el token del piloto.

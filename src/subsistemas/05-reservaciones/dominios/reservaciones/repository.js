@@ -1,0 +1,2 @@
+﻿const p=require("../../../../shared/config/prisma");const include={pasajero:true,vuelo:true,asiento:true,checkIn:true};exports.listar=()=>p.reservacion.findMany({include});exports.obtener=id=>p.reservacion.findUnique({where:{id:Number(id)},include});exports.crear=data=>p.reservacion.create({data,include});exports.actualizar=(id,data)=>p.reservacion.update({where:{id:Number(id)},data,include});exports.vuelo=id=>p.vuelo.findUnique({where:{id:Number(id)}});exports.asiento=id=>p.asientoAeronave.findUnique({where:{id:Number(id)}});
+

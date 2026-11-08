@@ -1,0 +1,448 @@
+@baseUrl = http://localhost:3000/api
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiY29ycmVvIjoiYWRtaW5AZ2xvYmFsYWlycG9ydC5jb20iLCJyb2wiOiJBRE1JTl9HRU5FUkFMIiwiaWF0IjoxNzk0MDkwMDk4LCJleHAiOjE3OTQwOTcyOTh9.kU2Am2h2UwTNnZHMPRJubbfKIRoVd7ehL25lEiL6Fu0
+
+########################################################
+# SUBSISTEMA 1: SEGURIDAD Y RECURSOS HUMANOS
+########################################################
+
+########################################################
+# 0. SALUD DEL BACKEND
+########################################################
+
+###
+### Comprobar que la API está funcionando
+GET {{baseUrl}}/salud
+
+
+########################################################
+# 1. AUTENTICACIÓN
+########################################################
+
+###
+### Login del Administrador General
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "correo": "admin@globalairport.com",
+  "password": "Admin12345"
+}
+
+###
+### Obtener información del usuario autenticado
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}
+
+###
+### Probar /me sin token
+### Debe responder 401
+GET {{baseUrl}}/auth/me
+
+###
+### Probar /me con token inválido
+### Debe responder 401
+GET {{baseUrl}}/auth/me
+Authorization: Bearer TOKEN_INVALIDO
+
+
+########################################################
+# 2. ROLES
+########################################################
+# GET: cualquier usuario autenticado
+# POST, PATCH y DELETE: únicamente ADMIN_GENERAL
+########################################################
+
+###
+### Listar todos los roles
+GET {{baseUrl}}/roles
+Authorization: Bearer {{token}}
+
+###
+### Obtener rol por ID
+GET {{baseUrl}}/roles/1
+Authorization: Bearer {{token}}
+
+###
+### Obtener rol ADMIN_AEROPUERTO
+### Ajuste el ID según los datos reales
+GET {{baseUrl}}/roles/2
+Authorization: Bearer {{token}}
+
+###
+### Obtener rol EMPLEADO
+### Ajuste el ID según los datos reales
+GET {{baseUrl}}/roles/3
+Authorization: Bearer {{token}}
+
+###
+### Obtener rol PILOTO
+### Ajuste el ID según los datos reales
+GET {{baseUrl}}/roles/4
+Authorization: Bearer {{token}}
+
+###
+### Crear un nuevo rol
+### Rol permitido: ADMIN_GENERAL
+POST {{baseUrl}}/roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "codigo": "SUPERVISOR",
+  "nombre": "Supervisor de Operaciones"
+}
+
+###
+### Actualizar un rol
+### Rol permitido: ADMIN_GENERAL
+PATCH {{baseUrl}}/roles/5
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Supervisor Aeroportuario"
+}
+
+###
+### Actualizar código y nombre de un rol
+### Rol permitido: ADMIN_GENERAL
+PATCH {{baseUrl}}/roles/5
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "codigo": "SUPERVISOR_AEROPUERTO",
+  "nombre": "Supervisor de Aeropuerto"
+}
+
+###
+### Eliminar un rol
+### Rol permitido: ADMIN_GENERAL
+### No se podrá eliminar si existen usuarios relacionados
+DELETE {{baseUrl}}/roles/5
+Authorization: Bearer {{token}}
+
+
+########################################################
+# 3. USUARIOS
+########################################################
+# Todas estas rutas requieren ADMIN_GENERAL
+#
+# En el código recibido:
+# - Existe listar
+# - Existe obtener
+# - Existe crear
+# - Existe actualizar
+# - Existe desactivar
+# - NO existe DELETE /usuarios/:id
+########################################################
+
+###
+### Listar usuarios
+GET {{baseUrl}}/usuarios
+Authorization: Bearer {{token}}
+
+###
+### Obtener usuario por ID
+GET {{baseUrl}}/usuarios/1
+Authorization: Bearer {{token}}
+
+###
+### Crear usuario Administrador de Aeropuerto
+### Primero consulte GET /roles para confirmar el rolId
+POST {{baseUrl}}/usuarios
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Gerente Aeropuerto SJO",
+  "correo": "gerente.sjo@globalairport.com",
+  "password": "Gerente123",
+  "telefono": "88880001",
+  "rolId": 2
+}
+
+###
+### Crear usuario Empleado
+### Primero consulte GET /roles para confirmar el rolId
+POST {{baseUrl}}/usuarios
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Carlos Ramirez",
+  "correo": "carlos.empleado@globalairport.com",
+  "password": "Empleado123",
+  "telefono": "88880002",
+  "rolId": 3
+}
+
+###
+### Crear usuario Piloto
+### Primero consulte GET /roles para confirmar el rolId
+POST {{baseUrl}}/usuarios
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Maria Gonzalez",
+  "correo": "maria.piloto@globalairport.com",
+  "password": "Piloto123",
+  "telefono": "88880003",
+  "rolId": 4
+}
+
+###
+### Actualizar nombre y teléfono de un usuario
+PATCH {{baseUrl}}/usuarios/2
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Gerente Aeropuerto Juan Santamaria",
+  "telefono": "87770001"
+}
+
+###
+### Actualizar correo del usuario
+PATCH {{baseUrl}}/usuarios/2
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "correo": "gerente.actualizado@globalairport.com"
+}
+
+###
+### Cambiar contraseña de un usuario
+PATCH {{baseUrl}}/usuarios/2
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "password": "NuevaClave123"
+}
+
+###
+### Cambiar rol de un usuario
+### Verifique primero el ID del rol
+PATCH {{baseUrl}}/usuarios/2
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "rolId": 2
+}
+
+###
+### Desactivar usuario
+### No elimina el registro
+PATCH {{baseUrl}}/usuarios/2/desactivar
+Authorization: Bearer {{token}}
+
+
+########################################################
+# 4. EMPLEADOS
+########################################################
+# GET: cualquier usuario autenticado
+# POST, PATCH y DELETE:
+# - ADMIN_GENERAL
+# - ADMIN_AEROPUERTO
+#
+# Antes de crear un empleado deben existir:
+# 1. Usuario con rol EMPLEADO
+# 2. Aeropuerto
+########################################################
+
+###
+### Listar empleados
+GET {{baseUrl}}/empleados
+Authorization: Bearer {{token}}
+
+###
+### Obtener empleado por ID
+GET {{baseUrl}}/empleados/1
+Authorization: Bearer {{token}}
+
+###
+### Crear empleado
+### usuarioId debe corresponder a un usuario existente
+### aeropuertoId debe corresponder a un aeropuerto existente
+POST {{baseUrl}}/empleados
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "usuarioId": 3,
+  "aeropuertoId": 1,
+  "numeroEmpleado": "EMP-001",
+  "puesto": "Agente de Operaciones"
+}
+
+###
+### Crear empleado de seguridad
+POST {{baseUrl}}/empleados
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "usuarioId": 4,
+  "aeropuertoId": 1,
+  "numeroEmpleado": "EMP-002",
+  "puesto": "Agente de Seguridad"
+}
+
+###
+### Actualizar puesto del empleado
+PATCH {{baseUrl}}/empleados/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "puesto": "Supervisor de Operaciones"
+}
+
+###
+### Trasladar empleado a otro aeropuerto
+PATCH {{baseUrl}}/empleados/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeropuertoId": 2
+}
+
+###
+### Actualizar número de empleado
+PATCH {{baseUrl}}/empleados/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "numeroEmpleado": "EMP-2026-001"
+}
+
+###
+### Actualizar varios datos del empleado
+PATCH {{baseUrl}}/empleados/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeropuertoId": 2,
+  "numeroEmpleado": "EMP-2026-001",
+  "puesto": "Supervisor de Operaciones"
+}
+
+###
+### Eliminar empleado
+### Esto elimina el perfil Empleado, no necesariamente el Usuario
+DELETE {{baseUrl}}/empleados/1
+Authorization: Bearer {{token}}
+
+
+########################################################
+# 5. PRUEBAS DE VALIDACIÓN
+########################################################
+
+###
+### Error: login con contraseña incorrecta
+### Debe responder 401
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "correo": "admin@globalairport.com",
+  "password": "ClaveIncorrecta"
+}
+
+###
+### Error: crear usuario sin nombre
+### Debe responder 400
+POST {{baseUrl}}/usuarios
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "correo": "usuario.incompleto@globalairport.com",
+  "password": "Password123",
+  "rolId": 3
+}
+
+###
+### Error: crear usuario con contraseña menor a 8 caracteres
+### Debe responder 400
+POST {{baseUrl}}/usuarios
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombreCompleto": "Usuario Prueba",
+  "correo": "prueba@globalairport.com",
+  "password": "123",
+  "rolId": 3
+}
+
+###
+### Error: crear rol sin código
+### Debe responder 400
+POST {{baseUrl}}/roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nombre": "Rol Incompleto"
+}
+
+###
+### Error: crear empleado sin usuarioId
+### Debe responder 400
+POST {{baseUrl}}/empleados
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeropuertoId": 1,
+  "numeroEmpleado": "EMP-ERROR-001",
+  "puesto": "Prueba"
+}
+
+###
+### Error: crear empleado sin aeropuertoId
+### Debe responder 400
+POST {{baseUrl}}/empleados
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "usuarioId": 3,
+  "numeroEmpleado": "EMP-ERROR-002",
+  "puesto": "Prueba"
+}
+
+###
+### Error: acceder a usuarios sin token
+### Debe responder 401
+GET {{baseUrl}}/usuarios
+
+###
+### Error: acceder a empleados con token inválido
+### Debe responder 401
+GET {{baseUrl}}/empleados
+Authorization: Bearer TOKEN_INVALIDO
+
+
+########################################################
+# 6. ORDEN RECOMENDADO DE EJECUCIÓN
+########################################################
+
+# 1. GET  /salud
+# 2. POST /auth/login
+# 3. Copiar el token en @token
+# 4. GET  /auth/me
+# 5. GET  /roles
+# 6. Crear el aeropuerto desde el Subsistema 2
+# 7. POST /usuarios con rol EMPLEADO
+# 8. Copiar el ID del usuario creado
+# 9. POST /empleados con usuarioId y aeropuertoId
+# 10. GET /empleados

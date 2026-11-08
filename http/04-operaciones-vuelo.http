@@ -1,0 +1,595 @@
+@baseUrl = http://localhost:3000/api
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiY29ycmVvIjoiYWRtaW5AZ2xvYmFsYWlycG9ydC5jb20iLCJyb2wiOiJBRE1JTl9HRU5FUkFMIiwiaWF0IjoxNzk0MDkwMDk4LCJleHAiOjE3OTQwOTcyOTh9.kU2Am2h2UwTNnZHMPRJubbfKIRoVd7ehL25lEiL6Fu0
+
+########################################################
+# SUBSISTEMA 4: OPERACIONES DE VUELO
+########################################################
+
+# Rutas base:
+#
+# /api/vuelos
+# /api/asignaciones-pilotos
+#
+# IMPORTANTE:
+# - Vuelos NO tiene DELETE en el código actual.
+# - Asignaciones de pilotos sí tiene CRUD completo.
+
+
+########################################################
+# 0. VERIFICAR EL BACKEND
+########################################################
+
+###
+### Verificar que la API esté funcionando
+GET {{baseUrl}}/salud
+
+
+########################################################
+# 1. AUTENTICACIÓN
+########################################################
+
+###
+### Login del Administrador General
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "correo": "admin@globalairport.com",
+  "password": "Admin12345"
+}
+
+###
+### Verificar usuario autenticado
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}
+
+
+########################################################
+# 2. VUELOS
+########################################################
+
+# GET:
+# - Cualquier usuario autenticado
+#
+# POST:
+# - ADMIN_GENERAL
+# - ADMIN_AEROPUERTO
+#
+# PATCH:
+# - ADMIN_GENERAL
+# - ADMIN_AEROPUERTO
+# - PILOTO
+#
+# DELETE:
+# - No existe en las rutas actuales
+
+
+###
+### Listar todos los vuelos
+GET {{baseUrl}}/vuelos
+Authorization: Bearer {{token}}
+
+###
+### Obtener vuelo por ID
+GET {{baseUrl}}/vuelos/1
+Authorization: Bearer {{token}}
+
+###
+### Obtener vuelo inexistente
+GET {{baseUrl}}/vuelos/99999
+Authorization: Bearer {{token}}
+
+
+########################################################
+# 2.1 CREAR VUELOS
+########################################################
+
+# Antes de crear un vuelo deben existir:
+#
+# 1. Aeropuerto de origen
+# 2. Aeropuerto de destino
+# 3. Aeronave
+#
+# Reglas:
+#
+# - Origen y destino deben ser diferentes.
+# - La salida debe ser anterior a la llegada.
+# - Las fechas deben enviarse en formato ISO.
+
+
+###
+### Crear vuelo nacional SJO a LIR
+POST {{baseUrl}}/vuelos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "numeroVuelo": "GA10S0",
+  "aeropuertoOrigenId": 1,
+  "aeropuertoDestinoId": 4,
+  "aeronaveId": 1,
+  "salidaProgramada": "2026-12-01T08:00:00.000Z",
+  "llegadaProgramada": "2026-12-01T09:00:00.000Z"
+}
+
+###
+### Crear vuelo LIR a SJO
+POST {{baseUrl}}/vuelos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "numeroVuelo": "GA101",
+  "aeropuertoOrigenId": 2,
+  "aeropuertoDestinoId": 1,
+  "aeronaveId": 1,
+  "salidaProgramada": "2026-12-01T14:00:00.000Z",
+  "llegadaProgramada": "2026-12-01T15:00:00.000Z"
+}
+
+###
+### Crear segundo vuelo
+POST {{baseUrl}}/vuelos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "numeroVuelo": "GA200",
+  "aeropuertoOrigenId": 4,
+  "aeropuertoDestinoId": 1,
+  "aeronaveId": 2,
+  "salidaProgramada": "2026-12-10T16:00:00.000Z",
+  "llegadaProgramada": "2026-12-10T17:15:00.000Z"
+}
+
+
+########################################################
+# 2.2 ACTUALIZAR VUELOS
+########################################################
+
+###
+### Actualizar estado del vuelo
+PATCH {{baseUrl}}/vuelos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "estado": "ABORDANDO"
+}
+
+###
+### Marcar vuelo en curso
+PATCH {{baseUrl}}/vuelos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "estado": "EN_VUELO"
+}
+
+###
+### Marcar vuelo completado
+PATCH {{baseUrl}}/vuelos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "estado": "COMPLETADO"
+}
+
+###
+### Cancelar vuelo
+PATCH {{baseUrl}}/vuelos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "estado": "CANCELADO"
+}
+
+###
+### Reprogramar salida y llegada
+PATCH {{baseUrl}}/vuelos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "salidaProgramada": "2026-12-01T09:00:00.000Z",
+  "llegadaProgramada": "2026-12-01T10:00:00.000Z"
+}
+
+###
+### Cambiar aeronave del vuelo
+PATCH {{baseUrl}}/vuelos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeronaveId": 2
+}
+
+###
+### Cambiar origen y destino
+PATCH {{baseUrl}}/vuelos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeropuertoOrigenId": 2,
+  "aeropuertoDestinoId": 1
+}
+
+###
+### Actualizar vuelo completo
+PATCH {{baseUrl}}/vuelos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "numeroVuelo": "GA100-A",
+  "aeropuertoOrigenId": 1,
+  "aeropuertoDestinoId": 2,
+  "aeronaveId": 1,
+  "salidaProgramada": "2026-12-01T10:00:00.000Z",
+  "llegadaProgramada": "2026-12-01T11:15:00.000Z",
+  "estado": "PROGRAMADO"
+}
+
+
+########################################################
+# 3. ASIGNACIONES DE PILOTOS
+########################################################
+
+# GET:
+# - Cualquier usuario autenticado
+#
+# POST, PATCH y DELETE:
+# - ADMIN_GENERAL
+# - ADMIN_AEROPUERTO
+#
+# Antes de crear una asignación deben existir:
+#
+# 1. El vuelo
+# 2. El piloto
+#
+# Ruta base:
+#
+# /api/asignaciones-pilotos
+
+
+###
+### Listar asignaciones de pilotos
+GET {{baseUrl}}/asignaciones-pilotos
+Authorization: Bearer {{token}}
+
+###
+### Obtener asignación por ID
+GET {{baseUrl}}/asignaciones-pilotos/1
+Authorization: Bearer {{token}}
+
+###
+### Obtener asignación inexistente
+GET {{baseUrl}}/asignaciones-pilotos/99999
+Authorization: Bearer {{token}}
+
+
+########################################################
+# 3.1 CREAR ASIGNACIONES
+########################################################
+
+###
+### Asignar piloto al vuelo
+POST {{baseUrl}}/asignaciones-pilotos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vueloId": 1,
+  "pilotoId": 1
+}
+
+###
+### Asignar segundo piloto al vuelo
+POST {{baseUrl}}/asignaciones-pilotos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vueloId": 1,
+  "pilotoId": 2
+}
+
+###
+### Asignar piloto a otro vuelo
+POST {{baseUrl}}/asignaciones-pilotos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vueloId": 2,
+  "pilotoId": 1
+}
+
+
+########################################################
+# 3.2 ACTUALIZAR ASIGNACIONES
+########################################################
+
+###
+### Cambiar piloto asignado
+PATCH {{baseUrl}}/asignaciones-pilotos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "pilotoId": 3
+}
+
+###
+### Cambiar el vuelo de la asignación
+PATCH {{baseUrl}}/asignaciones-pilotos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vueloId": 2
+}
+
+###
+### Cambiar vuelo y piloto
+PATCH {{baseUrl}}/asignaciones-pilotos/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vueloId": 2,
+  "pilotoId": 3
+}
+
+
+########################################################
+# 3.3 ELIMINAR ASIGNACIONES
+########################################################
+
+###
+### Eliminar asignación de piloto
+DELETE {{baseUrl}}/asignaciones-pilotos/1
+Authorization: Bearer {{token}}
+
+###
+### Eliminar asignación inexistente
+DELETE {{baseUrl}}/asignaciones-pilotos/99999
+Authorization: Bearer {{token}}
+
+
+########################################################
+# 4. PRUEBAS DE VALIDACIÓN DE VUELOS
+########################################################
+
+###
+### Error: vuelo sin número
+### Debe responder 400
+POST {{baseUrl}}/vuelos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "aeropuertoOrigenId": 1,
+  "aeropuertoDestinoId": 2,
+  "aeronaveId": 1,
+  "salidaProgramada": "2026-12-01T08:00:00.000Z",
+  "llegadaProgramada": "2026-12-01T09:00:00.000Z"
+}
+
+###
+### Error: origen y destino iguales
+### Debe responder 400
+POST {{baseUrl}}/vuelos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "numeroVuelo": "GA-ERROR-001",
+  "aeropuertoOrigenId": 1,
+  "aeropuertoDestinoId": 1,
+  "aeronaveId": 1,
+  "salidaProgramada": "2026-12-01T08:00:00.000Z",
+  "llegadaProgramada": "2026-12-01T09:00:00.000Z"
+}
+
+###
+### Error: llegada anterior a la salida
+### Debe responder 400
+POST {{baseUrl}}/vuelos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "numeroVuelo": "GA-ERROR-002",
+  "aeropuertoOrigenId": 1,
+  "aeropuertoDestinoId": 2,
+  "aeronaveId": 1,
+  "salidaProgramada": "2026-12-01T10:00:00.000Z",
+  "llegadaProgramada": "2026-12-01T09:00:00.000Z"
+}
+
+###
+### Error: salida y llegada iguales
+### Debe responder 400
+POST {{baseUrl}}/vuelos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "numeroVuelo": "GA-ERROR-003",
+  "aeropuertoOrigenId": 1,
+  "aeropuertoDestinoId": 2,
+  "aeronaveId": 1,
+  "salidaProgramada": "2026-12-01T10:00:00.000Z",
+  "llegadaProgramada": "2026-12-01T10:00:00.000Z"
+}
+
+###
+### Error: aeropuerto inexistente
+POST {{baseUrl}}/vuelos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "numeroVuelo": "GA-ERROR-004",
+  "aeropuertoOrigenId": 999,
+  "aeropuertoDestinoId": 2,
+  "aeronaveId": 1,
+  "salidaProgramada": "2026-12-01T08:00:00.000Z",
+  "llegadaProgramada": "2026-12-01T09:00:00.000Z"
+}
+
+###
+### Error: aeronave inexistente
+POST {{baseUrl}}/vuelos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "numeroVuelo": "GA-ERROR-005",
+  "aeropuertoOrigenId": 1,
+  "aeropuertoDestinoId": 2,
+  "aeronaveId": 999,
+  "salidaProgramada": "2026-12-01T08:00:00.000Z",
+  "llegadaProgramada": "2026-12-01T09:00:00.000Z"
+}
+
+###
+### Error: número de vuelo duplicado
+### Debe responder 409 si GA100 ya existe
+POST {{baseUrl}}/vuelos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "numeroVuelo": "GA100",
+  "aeropuertoOrigenId": 1,
+  "aeropuertoDestinoId": 2,
+  "aeronaveId": 1,
+  "salidaProgramada": "2026-12-02T08:00:00.000Z",
+  "llegadaProgramada": "2026-12-02T09:00:00.000Z"
+}
+
+
+########################################################
+# 5. PRUEBAS DE ASIGNACIONES
+########################################################
+
+###
+### Error: asignación sin vueloId
+### Debe responder 400
+POST {{baseUrl}}/asignaciones-pilotos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "pilotoId": 1
+}
+
+###
+### Error: asignación sin pilotoId
+### Debe responder 400
+POST {{baseUrl}}/asignaciones-pilotos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vueloId": 1
+}
+
+###
+### Error: vuelo inexistente
+POST {{baseUrl}}/asignaciones-pilotos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vueloId": 999,
+  "pilotoId": 1
+}
+
+###
+### Error: piloto inexistente
+POST {{baseUrl}}/asignaciones-pilotos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vueloId": 1,
+  "pilotoId": 999
+}
+
+###
+### Error: asignación duplicada
+### Debe responder 409 si la combinación ya existe
+POST {{baseUrl}}/asignaciones-pilotos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vueloId": 1,
+  "pilotoId": 1
+}
+
+
+########################################################
+# 6. PRUEBAS DE SEGURIDAD
+########################################################
+
+###
+### Listar vuelos sin token
+### Debe responder 401
+GET {{baseUrl}}/vuelos
+
+###
+### Listar asignaciones sin token
+### Debe responder 401
+GET {{baseUrl}}/asignaciones-pilotos
+
+###
+### Crear vuelo con token inválido
+### Debe responder 401
+POST {{baseUrl}}/vuelos
+Authorization: Bearer TOKEN_INVALIDO
+Content-Type: application/json
+
+{
+  "numeroVuelo": "GA-INVALIDO",
+  "aeropuertoOrigenId": 1,
+  "aeropuertoDestinoId": 2,
+  "aeronaveId": 1,
+  "salidaProgramada": "2026-12-01T08:00:00.000Z",
+  "llegadaProgramada": "2026-12-01T09:00:00.000Z"
+}
+
+###
+### Crear asignación con token inválido
+### Debe responder 401
+POST {{baseUrl}}/asignaciones-pilotos
+Authorization: Bearer TOKEN_INVALIDO
+Content-Type: application/json
+
+{
+  "vueloId": 1,
+  "pilotoId": 1
+}
+
+
+########################################################
+# 7. ORDEN RECOMENDADO
+########################################################
+
+# 1. Crear dos aeropuertos.
+# 2. Crear una aeronave.
+# 3. Crear usuario con rol PILOTO.
+# 4. Crear el perfil del piloto.
+# 5. Crear el vuelo.
+# 6. Asignar el piloto al vuelo.
+# 7. Consultar GET /vuelos/1.
+# 8. Actualizar el estado del vuelo.
+# 9. Eliminar solamente asignaciones de prueba.
